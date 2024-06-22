@@ -23,9 +23,9 @@ export default function App() {
     <View style={styles.container} className="px-7">
       
       <Image source={require('../assets/landing.png')} className="w-64 h-64" resizeMode="contain"/>
-      <Text className="text-center text-[#B6EADA] font-['popBold'] font-bold text-7xl">Arogya</Text>
+      <Text className="text-center text-[#B6EADA] font-['popBold'] font-bold text-5xl">Amrutham Gamaya</Text>
       <Text  className="text-[#B6EADA] font-['popRegular'] text-lg text-center">Never forget your medicine again</Text>
-      <Link href="/la" asChild><TouchableOpacity className="bg-orange-500 px-4 py-2 rounded mt-5"><Text className="text-white font-[popRegular] text-2xl">Get Started</Text></TouchableOpacity></Link>
+      <Link href="/intro" asChild><TouchableOpacity className="bg-orange-500 px-4 py-2 rounded mt-5"><Text className="text-white font-[popRegular] text-2xl">Get Started</Text></TouchableOpacity></Link>
     </View>
   );
 }

@@ -23,7 +23,10 @@
               "medcompanion"
             ]
           }
-        ]
+        ],
+        "NSCameraUsageDescription": "We need access to your camera to take photos.",
+        "NSPhotoLibraryUsageDescription": "We need access to your photo library to select photos.",
+        "NSMicrophoneUsageDescription": "We need access to your microphone to record audio."
       }
     },
     "android": {
@@ -44,14 +47,28 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow med-companion to access your camera",
+          "microphonePermission": "Allow med-companion to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
     ],
     "scheme": "medcompanion"
   }

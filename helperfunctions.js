@@ -3,8 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Function to store data
 export const storeData = async (key, value) => {
   try {
-    await AsyncStorage.setItem(key, value);
-    console.log(`Data stored successfully for key: ${key}`);
+    if(value ===null){
+      await AsyncStorage.removeItem(key);
+    }
+    else{
+      await AsyncStorage.setItem(key, value);
+      console.log(`Data stored successfully for key: ${key}`);
+    }
   } catch (error) {
     console.error(`Error storing data for key ${key}:`, error);
   }
@@ -28,9 +33,16 @@ export const getData = async (key) => {
 };
 
 // Function to clear data for a specific key
-export const clearData = async (key) => {
+export const clearData = async (name,key) => {
+  console.log(name)
+  console.log(key)
   try {
-    await AsyncStorage.removeItem(key);
+     let medData = await getData(key);
+     console.log("med",typeof medData)
+     medData= JSON.parse(medData);
+     const updatedData = medData.medicines.filter((item)=>item!=name); 
+     console.log("updated",updatedData)
+     await storeData(key,JSON.stringify(updatedData))
     console.log(`Data cleared successfully for key: ${key}`);
   } catch (error) {
     console.error(`Error clearing data for key ${key}:`, error);
@@ -52,7 +64,7 @@ const OpenAI = require('openai');
 import * as FileSystem from 'expo-file-system';
 
 // Initialize OpenAI instance with your API key
-const apiKey = ''; // Replace with your actual API key
+const apiKey = 'sk-proj-VtBbYEviq0L158jeRk9kT3BlbkFJq91mEMcMesr6e3dSA25F'; // Replace with your actual API key
 const openai = new OpenAI({ apiKey });
 
 // Function to encode an image file to base64 format

@@ -1,12 +1,47 @@
-import {  Image, Text, TouchableOpacity, View } from 'react-native';
+import {  Image, Text, TouchableOpacity, View,FlatList } from 'react-native';
 import { StatusBar } from 'expo-status-bar'
 import {useEffect, useState} from "react";
-import { encodeImage, getData, getMedicinesFromImage, storeData } from '../../helperfunctions';
+import { encodeImage, getData, getMedicinesFromImage, storeData,clearData } from '../../helperfunctions';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { router } from 'expo-router';
+
+
+
+
+const Card = ({ data ,handleDelete}) => {
+console.log(data)
+  return (
+    <View className="bg-white flex flex-row justify-between m-3 px-3 py-4 rounded-md border-orange-400 border-4" >
+      <Text className="text-black text-xl font-semibold ">{data}</Text>
+      <TouchableOpacity onPress={()=>handleDelete(data)} ><AntDesign name="delete" size={20} color="red" /></TouchableOpacity>
+    </View>
+  );
+};
 
 export default function App() {
 
+
+
   const [img, setImg] = useState("")
   const [data, setData] = useState({})
+
+
+  const handleDelete = async (name) => {
+    try {
+      const updatedMedicines = data.medicines.filter((item) => item !== name);
+      setData({ ...data, medicines: updatedMedicines });
+      await storeData("tablets", JSON.stringify({ ...data, medicines: updatedMedicines }));
+      if(updatedMedicines.length ===0){
+        console.log("hjfhkjdashfjdajfgdsafhdsghgah")
+        await storeData("tablets", null);
+        router.navigate("/intro")
+      }
+    } catch (error) {
+      console.error(`Error updating data:`, error);
+    }
+  };
+
 
   useEffect(() => {
     const fetchImage = async () => {
@@ -59,19 +94,25 @@ export default function App() {
       <Text>Loading data....</Text>
     )
   }
+
   return (
-    <>
-      <View className="bg-[#03001C] h-full flex flex-col justify-center items-center">
-        <StatusBar backgroundColor='#161622' style='light' />
-        <Text style={{ color: 'white', marginBottom: 10 }}>List of Medicines:</Text>
-        <View style={{ backgroundColor: '#FFFFFF', padding: 10, borderRadius: 8, width: '90%' }}>
-          {data.medicines.map((medicine, index) => (
-            <Text key={index} style={{ marginBottom: 5 }}>{medicine}</Text>
-          ))}
-        </View>
-      </View>
+    <> 
+      <SafeAreaView className="bg-[#03001C] h-full flex flex-col px-4 py-2" >
+      <FlatList  
+        data = {data.medicines}
+        keyExtractor={(item,index)=>index.toString()}
+        renderItem={({ item, index }) => (
+          <Card key={index} data={item} handleDelete={handleDelete} />
+        )}
+        ListHeaderComponent={() => (
+          <View className="flex text-left my-6 px-4 space-y-6">
+            <Text className="text-white text-3xl">Hello, Recipient</Text>
+          </View>
+        )}
+      />
+      </SafeAreaView>
+      <StatusBar backgroundColor='#161622' style='light' />
     </>
   );
 }
-
 

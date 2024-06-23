@@ -51,9 +51,6 @@ export const clearAllData = async () => {
 const OpenAI = require('openai');
 import * as FileSystem from 'expo-file-system';
 
-// Initialize OpenAI instance with your API key
-const Key = ''; // Replace with your actual API key
-const openai = new OpenAI({ apiKey });
 
 // Function to encode an image file to base64 format
 export async function encodeImage(imagePath) {

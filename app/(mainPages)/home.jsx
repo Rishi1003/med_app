@@ -1,6 +1,6 @@
-import {  Image, Text, TouchableOpacity, View,FlatList } from 'react-native';
+import {  Animated,Easing,Image, Text, TouchableOpacity, View,FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar'
-import {useEffect, useState} from "react";
+import {useEffect, useState, useRef} from "react";
 import { encodeImage, getData, getMedicinesFromImage, storeData,clearData } from '../../helperfunctions';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -21,6 +21,40 @@ console.log(data)
 
 export default function App() {
 
+  const scaleValue = useRef(new Animated.Value(1)).current;
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    image: {
+      width: 200,
+      height: 200,
+    },
+  });
+
+  useEffect(() => {
+    const animate = () => {
+      Animated.sequence([
+        Animated.timing(scaleValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleValue, {
+          toValue: 0.9,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ]).start(() => animate());
+    };
+
+    animate();
+  }, [scaleValue]);
 
 
   const [img, setImg] = useState("")
@@ -91,7 +125,16 @@ export default function App() {
   if(Object.keys(data).length === 0)
   {
     return(
-      <Text>Loading data....</Text>
+      <View className="flex h-full bg-[#03001c] justify-center items-center px-10">
+        <Animated.Image
+        source={require('../../assets/landing.png')}
+        className="w-20 h-20"
+        resizeMethod="contain"
+        style={[styles.image, { transform: [{ scale: scaleValue }] }]}
+        
+      />
+        <Text className="text-xl text-[#B6EADA] text-center mt-5 font-[popSemiBold]">Analyzing Prescription</Text>
+      </View>
     )
   }
 

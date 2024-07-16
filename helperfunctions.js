@@ -63,9 +63,7 @@ export const clearAllData = async () => {
 const OpenAI = require('openai');
 import * as FileSystem from 'expo-file-system';
 
-// // Initialize OpenAI instance with your API key
-const apiKey = ''; // Replace with your actual API key
-const openai = new OpenAI({ apiKey });
+
 
 // Function to encode an image file to base64 format
 export async function encodeImage(imagePath) {
@@ -92,7 +90,7 @@ export async function getMedicinesFromImage(imagePath) {
         {
           role: "user",
           content: [
-            { type: "text", text: "get me all the medicines in the image in a json format {medicines:['med1','med2','med3']}" },
+            { type: "text", text: "Please provide the names of all the medicines shown in the image along with a one line description with common words for each. Also, if there is a specific time mentioned in the prescription for taking these medicines (such as 1-1-1), include that in a JSON format like this: {\"medicines\":[{\"name\":\"med1\", \"description\":\"desc1\", \"time\":\"1-1-1\"}, {\"name\":\"med2\", \"description\":\"desc2\", \"time\":\"1-1-1\"}]}" },
             {
               type: "image_url",
               image_url: {

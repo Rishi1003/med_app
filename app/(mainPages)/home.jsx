@@ -10,11 +10,36 @@ import { router } from 'expo-router';
 
 
 const Card = ({ data ,handleDelete}) => {
-console.log(data)
+const {description,name,time} = data;
+const timeArray = time.split('-');
+notificationTimeArray = []
+if(timeArray[0]==='1'){
+  notificationTimeArray.push("9:00AM")
+}else{
+  notificationTimeArray.push("-")
+}
+if(timeArray[1]==='1'){
+  notificationTimeArray.push("1:00PM")
+}else{
+  notificationTimeArray.push("-")
+}
+if(timeArray[2]==='1'){
+  notificationTimeArray.push("9:00PM")
+}else{
+  notificationTimeArray.push("-")
+}
   return (
-    <View className="bg-white flex flex-row justify-between m-3 px-3 py-4 rounded-md border-orange-400 border-4" >
-      <Text className="text-black text-xl font-semibold ">{data}</Text>
-      <TouchableOpacity onPress={()=>handleDelete(data)} ><AntDesign name="delete" size={20} color="red" /></TouchableOpacity>
+    <View className="bg-white flex flex-row justify-between items-center  m-3 px-3 py-2 rounded-md border-orange-400 border-4" >
+      <View className="flex flex-col justify-center items-start">
+        <Text className="text-black text-xl font-semibold mb-1">{name}</Text>
+        <Text className="text-black text-sm w-[220px]">{description}</Text>
+        <View className="flex flex-row items-center justify-start gap-2 mt-1">
+          <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1 ">{notificationTimeArray[0]}</Text>
+          <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1  ">{notificationTimeArray[1]}</Text>
+          <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1 ">{notificationTimeArray[2]}</Text>
+        </View>
+      </View>
+      <TouchableOpacity onPress={()=>handleDelete(name)} ><AntDesign name="delete" size={20} color="red" /></TouchableOpacity>
     </View>
   );
 };
@@ -63,7 +88,8 @@ export default function App() {
 
   const handleDelete = async (name) => {
     try {
-      const updatedMedicines = data.medicines.filter((item) => item !== name);
+      const updatedMedicines = data.medicines.filter((item) => item.name !== name);
+      console.log("here",name, updatedMedicines)
       setData({ ...data, medicines: updatedMedicines });
       await storeData("tablets", JSON.stringify({ ...data, medicines: updatedMedicines }));
       if(updatedMedicines.length ===0){
@@ -138,7 +164,11 @@ export default function App() {
     )
   }
 
+  // console.log("hello",data)
+
   return (
+
+
     <> 
       <SafeAreaView className="bg-[#03001C] h-full flex flex-col px-4 py-2" >
       <FlatList  

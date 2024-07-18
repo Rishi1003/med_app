@@ -1,12 +1,107 @@
-import {  Image, Text, TouchableOpacity, View } from 'react-native';
+import {  Animated,Easing,Image, Text, TouchableOpacity, View,FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar'
-import {useEffect, useState} from "react";
-import { encodeImage, getData, getMedicinesFromImage, storeData } from '../../helperfunctions';
+import {useEffect, useState, useRef} from "react";
+import { encodeImage, getData, getMedicinesFromImage, storeData,clearData } from '../../helperfunctions';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { router } from 'expo-router';
+
+
+
+
+const Card = ({ data ,handleDelete}) => {
+const {description,name,time} = data;
+const timeArray = time.split('-');
+notificationTimeArray = []
+if(timeArray[0]==='1'){
+  notificationTimeArray.push("9:00AM")
+}else{
+  notificationTimeArray.push("-")
+}
+if(timeArray[1]==='1'){
+  notificationTimeArray.push("1:00PM")
+}else{
+  notificationTimeArray.push("-")
+}
+if(timeArray[2]==='1'){
+  notificationTimeArray.push("9:00PM")
+}else{
+  notificationTimeArray.push("-")
+}
+  return (
+    <View className="bg-white flex flex-row justify-between items-center  m-3 px-3 py-2 rounded-md border-orange-400 border-4" >
+      <View className="flex flex-col justify-center items-start">
+        <Text className="text-black text-xl font-semibold mb-1">{name}</Text>
+        <Text className="text-black text-sm w-[220px]">{description}</Text>
+        <View className="flex flex-row items-center justify-start gap-2 mt-1">
+          <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1 ">{notificationTimeArray[0]}</Text>
+          <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1  ">{notificationTimeArray[1]}</Text>
+          <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1 ">{notificationTimeArray[2]}</Text>
+        </View>
+      </View>
+      <TouchableOpacity onPress={()=>handleDelete(name)} ><AntDesign name="delete" size={20} color="red" /></TouchableOpacity>
+    </View>
+  );
+};
 
 export default function App() {
 
+  const scaleValue = useRef(new Animated.Value(1)).current;
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    image: {
+      width: 200,
+      height: 200,
+    },
+  });
+
+  useEffect(() => {
+    const animate = () => {
+      Animated.sequence([
+        Animated.timing(scaleValue, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleValue, {
+          toValue: 0.9,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ]).start(() => animate());
+    };
+
+    animate();
+  }, [scaleValue]);
+
+
   const [img, setImg] = useState("")
   const [data, setData] = useState({})
+
+
+  const handleDelete = async (name) => {
+    try {
+      const updatedMedicines = data.medicines.filter((item) => item.name !== name);
+      console.log("here",name, updatedMedicines)
+      setData({ ...data, medicines: updatedMedicines });
+      await storeData("tablets", JSON.stringify({ ...data, medicines: updatedMedicines }));
+      if(updatedMedicines.length ===0){
+        console.log("hjfhkjdashfjdajfgdsafhdsghgah")
+        await storeData("tablets", null);
+        router.navigate("/intro")
+      }
+    } catch (error) {
+      console.error(`Error updating data:`, error);
+    }
+  };
+
 
   useEffect(() => {
     const fetchImage = async () => {
@@ -56,22 +151,41 @@ export default function App() {
   if(Object.keys(data).length === 0)
   {
     return(
-      <Text>Loading data....</Text>
+      <View className="flex h-full bg-[#03001c] justify-center items-center px-10">
+        <Animated.Image
+        source={require('../../assets/landing.png')}
+        className="w-20 h-20"
+        resizeMethod="contain"
+        style={[styles.image, { transform: [{ scale: scaleValue }] }]}
+        
+      />
+        <Text className="text-xl text-[#B6EADA] text-center mt-5 font-[popSemiBold]">Analyzing Prescription</Text>
+      </View>
     )
   }
+
+  // console.log("hello",data)
+
   return (
-    <>
-      <View className="bg-[#03001C] h-full flex flex-col justify-center items-center">
-        <StatusBar backgroundColor='#161622' style='light' />
-        <Text style={{ color: 'white', marginBottom: 10 }}>List of Medicines:</Text>
-        <View style={{ backgroundColor: '#FFFFFF', padding: 10, borderRadius: 8, width: '90%' }}>
-          {data.medicines.map((medicine, index) => (
-            <Text key={index} style={{ marginBottom: 5 }}>{medicine}</Text>
-          ))}
-        </View>
-      </View>
+
+
+    <> 
+      <SafeAreaView className="bg-[#03001C] h-full flex flex-col px-4 py-2" >
+      <FlatList  
+        data = {data.medicines}
+        keyExtractor={(item,index)=>index.toString()}
+        renderItem={({ item, index }) => (
+          <Card key={index} data={item} handleDelete={handleDelete} />
+        )}
+        ListHeaderComponent={() => (
+          <View className="flex text-left my-6 px-4 space-y-6">
+            <Text className="text-white text-3xl">Hello, Recipient</Text>
+          </View>
+        )}
+      />
+      </SafeAreaView>
+      <StatusBar backgroundColor='#161622' style='light' />
     </>
   );
 }
-
 

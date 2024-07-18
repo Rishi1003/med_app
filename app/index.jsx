@@ -37,6 +37,7 @@ export default function App() {
       <Text className="text-center text-[#B6EADA] font-['popBold'] font-bold text-5xl">Amrutham Gamaya</Text>
       <Text  className="text-[#B6EADA] font-['popRegular'] text-lg text-center">Never forget your medicine again</Text>
       <Link href="/intro" asChild><TouchableOpacity className="bg-orange-500 px-4 py-2 rounded mt-5"><Text className="text-white font-[popRegular] text-2xl">Get Started</Text></TouchableOpacity></Link>
+      <StatusBar backgroundColor='#161622' style='light' />
     </View>
   );
 }

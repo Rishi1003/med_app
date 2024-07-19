@@ -63,7 +63,8 @@ export const clearAllData = async () => {
 const OpenAI = require('openai');
 import * as FileSystem from 'expo-file-system';
 
-
+const apiKey = 'sk-proj-2bYVQ51TPwgW9GbUc5cXT3BlbkFJCMBn4m3fGuCdqI9E4SYb'; // Replace with your actual API key
+const openai = new OpenAI({ apiKey });
 
 // Function to encode an image file to base64 format
 export async function encodeImage(imagePath) {
@@ -90,7 +91,7 @@ export async function getMedicinesFromImage(imagePath) {
         {
           role: "user",
           content: [
-            { type: "text", text: "Please provide the names of all the medicines shown in the image along with a one line description with common words for each. Also, if there is a specific time mentioned in the prescription for taking these medicines (such as 1-1-1), include that in a JSON format like this: {\"medicines\":[{\"name\":\"med1\", \"description\":\"desc1\", \"time\":\"1-1-1\"}, {\"name\":\"med2\", \"description\":\"desc2\", \"time\":\"1-1-1\"}]}" },
+            { type: "text", text: "Please provide the names of all the medicines shown in the image along with a one line description with common words for each. Also, if there is a specific time mentioned in the prescription for taking these medicines (such as 1-1-1), if it is 1-0-0 then set time as then give me 09:00 AM-no-no if 0-1-0 then no-01:00 PM-no and 0-0-1 then no-no-09:00 PM  include that in a JSON format like this: {\"medicines\":[{\"name\":\"med1\", day:[0,1,2,3,4,5,6],\"description\":\"desc1\", \"time\":\"09:00 AM-01:00 PM-09:00 PM\"}, {\"name\":\"med2\", \"description\":\"desc2\", day:[0,1,2,3,4,5,6],\"time\":\"09:00 AM-01:00 PM-09:00 AM\"}]}" },
             {
               type: "image_url",
               image_url: {
@@ -107,5 +108,52 @@ export async function getMedicinesFromImage(imagePath) {
   } catch (error) {
     console.error("Error:", error);
     throw error;
+  }
+}
+
+export async function scheduleCronJob() {
+  try {
+    console.log('====================================');
+    console.log("hi");
+    console.log('====================================');
+    let meds = await getData("tablets");
+    meds = JSON.parse(meds);
+
+    const cron_data = {};
+    for (const med of meds.medicines) { // Accessing 'medicines' array within 'meds'
+      // Extract medicine name and time
+      const { name, time, day } = med;
+      
+      // Split time string into an array and filter out 'no' values
+      const timeArray = time.split("-").filter(t => t !== "no");
+      
+      // Assign to cron_data with the medicine name as key
+      cron_data[name] = {
+        time: timeArray,
+        day: day
+      };
+    }
+    
+    cron_data.number = await getData("mobile")
+
+    // Make POST request to your local server
+    const url = 'http://192.168.11.87:3001/schedule';
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(cron_data)
+    };
+
+    const response = await fetch(url, options);
+    if (response.ok) {
+      const data = await response.text();
+      console.log('Schedule set successfully:', data);
+    } else {
+      throw new Error('Failed to set schedule');
+    }
+  } catch (error) {
+    console.error('Error scheduling cron job:', error);
   }
 }

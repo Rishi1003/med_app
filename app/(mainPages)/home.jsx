@@ -1,45 +1,144 @@
-import {  Animated,Easing,Image, Text, TouchableOpacity, View,FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import {  Animated,Easing,Image, Text, TouchableOpacity, View,FlatList, ActivityIndicator, StyleSheet, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar'
 import {useEffect, useState, useRef} from "react";
-import { encodeImage, getData, getMedicinesFromImage, storeData,clearData } from '../../helperfunctions';
+import { encodeImage, getData, getMedicinesFromImage, storeData,clearData, scheduleCronJob } from '../../helperfunctions';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { router } from 'expo-router';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 
 
+// const Card = ({ data, handleDelete, handleEdit }) => {
+//   const { description, name, time } = data;
+//   const [notificationTimeArray, setNotificationTimeArray] = useState(time.split('-'));
+//   const [editingIndex, setEditingIndex] = useState(-1);
 
-const Card = ({ data ,handleDelete}) => {
-const {description,name,time} = data;
-const timeArray = time.split('-');
-notificationTimeArray = []
-if(timeArray[0]==='1'){
-  notificationTimeArray.push("9:00AM")
-}else{
-  notificationTimeArray.push("-")
-}
-if(timeArray[1]==='1'){
-  notificationTimeArray.push("1:00PM")
-}else{
-  notificationTimeArray.push("-")
-}
-if(timeArray[2]==='1'){
-  notificationTimeArray.push("9:00PM")
-}else{
-  notificationTimeArray.push("-")
-}
+//   const handleTimeEdit = (index, newValue) => {
+//     const updatedTimes = [...notificationTimeArray];
+//     updatedTimes[index] = newValue;
+//     setNotificationTimeArray(updatedTimes);
+//   };
+
+//   const handleSaveEdit = () => {
+//     handleEdit(name, notificationTimeArray.join('-'));
+//     setEditingIndex(-1); // Exit edit mode
+//   };
+
+//   return (
+//     <View className="bg-white flex flex-row justify-between items-center m-3 px-3 py-2 rounded-md border-orange-400 border-4">
+//       <View className="flex flex-col justify-center items-start">
+//         <Text className="text-black text-xl font-semibold mb-1">{name}</Text>
+//         <Text className="text-black text-sm w-[220px]">{description}</Text>
+//         <View className="flex flex-row items-center justify-start gap-2 mt-1">
+//           {notificationTimeArray.map((timeSlot, index) => (
+//             <View key={index} style={{ flexDirection: 'row', alignItems: 'center' }}>
+//               {editingIndex === index ? (
+//                 <TextInput
+//                   style={{
+//                     borderWidth: 1,
+//                     borderColor: '#ccc',
+//                     borderRadius: 5,
+//                     paddingHorizontal: 8,
+//                     paddingVertical: 4,
+//                     minWidth: 60,
+//                     textAlign: 'center',
+//                   }}
+//                   value={timeSlot}
+//                   onChangeText={(text) => handleTimeEdit(index, text)}
+//                 />
+//               ) : (
+//                 <TouchableOpacity onPress={() => setEditingIndex(index)}>
+//                   <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1">
+//                     {timeSlot}
+//                   </Text>
+//                 </TouchableOpacity>
+//               )}
+//             </View>
+//           ))}
+//         </View>
+//         {editingIndex !== -1 && (
+//           <TouchableOpacity onPress={handleSaveEdit}>
+//             <Text style={{ color: 'blue', marginTop: 5 }}>Save</Text>
+//           </TouchableOpacity>
+//         )}
+//       </View>
+//       <TouchableOpacity onPress={() => handleDelete(name)}>
+//         <AntDesign name="delete" size={20} color="red" />
+//       </TouchableOpacity>
+//     </View>
+//   );
+// };
+
+const Card = ({ data, handleDelete, handleEdit }) => {
+  const { description, name, time, day } = data;
+  const [notificationTimeArray, setNotificationTimeArray] = useState(time.split('-'));
+  const [selectedDays, setSelectedDays] = useState(day); // Initialize state with day array
+  const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(-1);
+
+  const showTimePicker = (index) => {
+    setEditingIndex(index);
+    setTimePickerVisible(true);
+  };
+
+  const hideTimePicker = () => {
+    setEditingIndex(-1);
+    setTimePickerVisible(false);
+  };
+
+  const handleConfirm = (selectedTime) => {
+    const formattedTime = selectedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const updatedTimes = [...notificationTimeArray];
+    updatedTimes[editingIndex] = formattedTime;
+    setNotificationTimeArray(updatedTimes);
+    handleEdit(name, updatedTimes.join('-'), selectedDays);
+    hideTimePicker();
+  };
+
+  const handleDayToggle = (index) => {
+    const updatedDays = selectedDays.includes(index)
+      ? selectedDays.filter(dayIndex => dayIndex !== index)
+      : [...selectedDays, index];
+    setSelectedDays(updatedDays);
+    handleEdit(name, notificationTimeArray.join('-'), updatedDays);
+  };
+
+  const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
   return (
-    <View className="bg-white flex flex-row justify-between items-center  m-3 px-3 py-2 rounded-md border-orange-400 border-4" >
-      <View className="flex flex-col justify-center items-start">
-        <Text className="text-black text-xl font-semibold mb-1">{name}</Text>
-        <Text className="text-black text-sm w-[220px]">{description}</Text>
-        <View className="flex flex-row items-center justify-start gap-2 mt-1">
-          <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1 ">{notificationTimeArray[0]}</Text>
-          <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1  ">{notificationTimeArray[1]}</Text>
-          <Text className="text-black text-[12px] border-orange-400 rounded-md border-2 w-[70px] text-center p-1 ">{notificationTimeArray[2]}</Text>
+    <View style={{ backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', margin: 10, padding: 10, borderRadius: 5, borderWidth: 2, borderColor: 'orange' }}>
+      <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>
+        <Text style={{ color: 'black', fontSize: 20, fontWeight: 'bold', marginBottom: 5 }}>{name}</Text>
+        <Text style={{ color: 'black', fontSize: 14, width: 220 }}>{description}</Text>
+        <View className="flex mb-4 w-full pl-10 gap-4" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', marginTop: 5 }}>
+          {notificationTimeArray.map((timeSlot, index) => (
+            <TouchableOpacity key={index} onPress={() => showTimePicker(index)}>
+              <Text className="h-10 pt-3" style={{ color: 'black', fontSize: 12, borderWidth: 2, borderColor: 'orange', borderRadius: 5, width: 70, textAlign: 'center', padding: 5 }}>{timeSlot}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
+
+        <View className="flex self-center flex-row gap-3">
+          {daysOfWeek.map((dayLabel, index) => (
+            <TouchableOpacity key={index} onPress={() => handleDayToggle(index)}>
+              <View className={`w-8 h-8 rounded-full flex justify-center items-center ${selectedDays.includes(index) ? 'bg-orange-600' : 'bg-orange-300'}`}>
+                <Text className="text-white font-semibold">{dayLabel}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      
       </View>
-      <TouchableOpacity onPress={()=>handleDelete(name)} ><AntDesign name="delete" size={20} color="red" /></TouchableOpacity>
+      <TouchableOpacity onPress={() => handleDelete(name)}>
+        <AntDesign name="delete" size={20} color="red" />
+      </TouchableOpacity>
+      <DateTimePickerModal
+        isVisible={isTimePickerVisible}
+        mode="time"
+        onConfirm={handleConfirm}
+        onCancel={hideTimePicker}
+      />
     </View>
   );
 };
@@ -86,21 +185,53 @@ export default function App() {
   const [data, setData] = useState({})
 
 
-  const handleDelete = async (name) => {
-    try {
-      const updatedMedicines = data.medicines.filter((item) => item.name !== name);
-      console.log("here",name, updatedMedicines)
-      setData({ ...data, medicines: updatedMedicines });
-      await storeData("tablets", JSON.stringify({ ...data, medicines: updatedMedicines }));
-      if(updatedMedicines.length ===0){
-        console.log("hjfhkjdashfjdajfgdsafhdsghgah")
-        await storeData("tablets", null);
-        router.navigate("/intro")
-      }
-    } catch (error) {
-      console.error(`Error updating data:`, error);
+  // const handleDelete = async (name) => {
+  //   try {
+  //     const updatedMedicines = data.medicines.filter((item) => item.name !== name);
+  //     console.log("here",name, updatedMedicines)
+  //     setData({ ...data, medicines: updatedMedicines });
+  //     await storeData("tablets", JSON.stringify({ ...data, medicines: updatedMedicines }));
+  //     if(updatedMedicines.length ===0){
+  //       console.log("hjfhkjdashfjdajfgdsafhdsghgah")
+  //       await storeData("tablets", null);
+  //       router.navigate("/intro")
+  //     }
+  //   } catch (error) {
+  //     console.error(`Error updating data:`, error);
+  //   }
+  // };
+
+  // Update handleDelete to include handleEdit functionality
+const handleDelete = async (name) => {
+  try {
+    const updatedMedicines = data.medicines.filter((item) => item.name !== name);
+    setData({ ...data, medicines: updatedMedicines });
+    await storeData("tablets", JSON.stringify({ ...data, medicines: updatedMedicines }));
+    if (updatedMedicines.length === 0) {
+      await storeData("tablets", null);
+      router.navigate("/intro");
     }
-  };
+  } catch (error) {
+    console.error(`Error updating data:`, error);
+  }
+};
+
+// Function to handle editing notification times
+const handleEdit = async (name, newTime, newDays) => {
+  try {
+    const updatedMedicines = data.medicines.map((item) =>
+      item.name === name ? { ...item, time: newTime, day: newDays } : item
+    );
+    setData({ ...data, medicines: updatedMedicines });
+    await storeData("tablets", JSON.stringify({ ...data, medicines: updatedMedicines }));
+    console.log('====================================');
+    console.log(data.medicines);
+    console.log('====================================');
+    await scheduleCronJob();
+  } catch (error) {
+    console.error(`Error updating time for ${name}:`, error);
+  }
+};
 
 
   useEffect(() => {
@@ -129,6 +260,8 @@ export default function App() {
         } else {
           console.log("Setting data from AsyncStorage...");
           setData(JSON.parse(tablets));
+          const data = getData("tablets")
+          console.log(data)
         }
       } catch (error) {
         console.log('Error in useEffect:', error);
@@ -175,7 +308,7 @@ export default function App() {
         data = {data.medicines}
         keyExtractor={(item,index)=>index.toString()}
         renderItem={({ item, index }) => (
-          <Card key={index} data={item} handleDelete={handleDelete} />
+          <Card key={index} data={item} handleEdit={handleEdit} handleDelete={handleDelete} />
         )}
         ListHeaderComponent={() => (
           <View className="flex text-left my-6 px-4 space-y-6">
